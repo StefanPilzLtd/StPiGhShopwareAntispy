@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <defaults autowire="true" autoconfigure="false" public="false"/>
+
+        <service id="StPiGh\ShopwareAntispy\Service\PrivacyStateInstaller" public="true"/>
+
+        <service id="StPiGh\ShopwareAntispy\Subscriber\AdminPrivacySubscriber">
+            <argument>%shopware_administration.path_name%</argument>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="shopware.store_client" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" public="true" lazy="true"/>
+        <service id="shopware.frw_client" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" public="true" lazy="true"/>
+        <service id="shopware.store_download_client" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" public="true"/>
+        <service id="shopware.app_system.guzzle" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" lazy="true"/>
+
+        <service id="shopware.usage_data.gateway.client" class="StPiGh\ShopwareAntispy\Http\BlockingHttpClient" public="true"/>
+        <service id="service_registry.http_client" class="StPiGh\ShopwareAntispy\Http\BlockingHttpClient"/>
+    </services>
+</container>

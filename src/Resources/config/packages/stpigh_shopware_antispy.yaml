@@ -1,0 +1,7 @@
+shopware:
+    usage_data:
+        collection_enabled: false
+        gateway:
+            dispatch_enabled: false
+            base_uri: 'http://127.0.0.1'
+            batch_size: 1

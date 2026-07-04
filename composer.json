@@ -1,0 +1,50 @@
+{
+  "name": "stpi/stpigh-shopware-antispy",
+  "description": "Blocks Shopware telemetry, services, GMV/analytics and third-party admin calls.",
+  "version": "1.0.1",
+  "type": "shopware-platform-plugin",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Stefan Pilz Ltd.",
+      "email": "contact@stefanpilz.ltd",
+      "homepage": "https://stefanpilz.ltd",
+      "role": "Manufacturer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "StPiGh\\ShopwareAntispy\\": "src/"
+    }
+  },
+  "extra": {
+    "shopware-plugin-class": "StPiGh\\ShopwareAntispy\\StPiGhShopwareAntispy",
+    "plugin-icon": "src/Resources/config/plugin.png",
+    "label": {
+      "de-DE": "StPiGh Shopware Antispy",
+      "en-GB": "StPiGh Shopware Antispy"
+    },
+    "description": {
+      "de-DE": "Blockiert Shopware-Services, Usage Data, Analytics, GMV und Third-Party-Aufrufe aus der Administration.",
+      "en-GB": "Blocks Shopware services, usage data, analytics, GMV and third-party calls from the administration."
+    },
+    "manufacturerLink": {
+      "de-DE": "https://stefanpilz.ltd",
+      "en-GB": "https://stefanpilz.ltd"
+    },
+    "pluginSupport": {
+      "de-DE": "plugins@stefanpilz.ltd",
+      "en-GB": "plugins@stefanpilz.ltd"
+    },
+    "supportLink": {
+      "de-DE": "https://stefanpilz.ltd",
+      "en-GB": "https://stefanpilz.ltd"
+    }
+  },
+  "require": {
+    "php": "^8.2 || ^8.3 || ^8.4",
+    "shopware/core": "~6.7.0",
+    "shopware/administration": "~6.7.0",
+    "guzzlehttp/guzzle": "^7.0"
+  }
+}
