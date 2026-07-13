@@ -2,6 +2,7 @@
 
 namespace StPiGh\ShopwareAntispy\Subscriber;
 
+use StPiGh\ShopwareAntispy\Service\AntispyConfig;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -9,8 +10,10 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 class AdminPrivacySubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly string $adminPathName)
-    {
+    public function __construct(
+        private readonly string $adminPathName,
+        private readonly AntispyConfig $antispyConfig,
+    ) {
     }
 
     public static function getSubscribedEvents(): array
@@ -58,6 +61,16 @@ class AdminPrivacySubscriber implements EventSubscriberInterface
         $response->headers->set('X-StPiGh-Shopware-Antispy', 'active');
         $response->headers->set('Permissions-Policy', 'browsing-topics=(), interest-cohort=()');
         $response->headers->set('Referrer-Policy', 'same-origin');
-        $response->headers->set('Content-Security-Policy', "connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'");
+
+        // App admin modules are embedded as iframes; frame-src only opens up
+        // when app server communication is explicitly allowed via config.
+        $frameSrc = $this->antispyConfig->isAllowed(AntispyConfig::ALLOW_APP_SERVER_COMMUNICATION)
+            ? 'https:'
+            : "'self'";
+
+        $response->headers->set(
+            'Content-Security-Policy',
+            \sprintf("connect-src 'self'; frame-src %s; object-src 'none'; base-uri 'self'", $frameSrc)
+        );
     }
 }

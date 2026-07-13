@@ -17,6 +17,7 @@ class PrivacyStateInstaller
     public function __construct(
         private readonly Connection $connection,
         private readonly SystemConfigService $systemConfigService,
+        private readonly AntispyConfig $antispyConfig,
     ) {
     }
 
@@ -27,9 +28,34 @@ class PrivacyStateInstaller
         $this->disableShopwareServiceApps();
     }
 
+    /**
+     * Restores the shop to a working default state so that deactivating or
+     * uninstalling the plugin does not leave the store connection broken.
+     * Deactivated service apps are intentionally NOT re-enabled.
+     */
+    public function revert(): void
+    {
+        $this->systemConfigService->set(AntispyConfig::STORE_API_URI_KEY, AntispyConfig::STORE_API_URI_DEFAULT, null, false);
+        $this->systemConfigService->delete('core.usageData.lastEntitySyncRunDate');
+
+        $this->connection->executeStatement(
+            'UPDATE scheduled_task SET status = :status, next_execution_time = NOW(3), updated_at = NOW(3) WHERE name IN (:names)',
+            [
+                'status' => 'scheduled',
+                'names' => self::BLOCKED_TASKS,
+            ],
+            [
+                'names' => ArrayParameterType::STRING,
+            ]
+        );
+    }
+
     private function disableStoreAndUsageConfig(): void
     {
-        $this->systemConfigService->set('core.store.apiUri', 'http://127.0.0.1', null, false);
+        if (!$this->antispyConfig->isAllowed(AntispyConfig::ALLOW_STORE_COMMUNICATION)) {
+            $this->systemConfigService->set(AntispyConfig::STORE_API_URI_KEY, AntispyConfig::STORE_API_URI_BLOCKED, null, false);
+        }
+
         $this->systemConfigService->set('core.usageData.lastEntitySyncRunDate', '2999-12-31 23:59:59.000', null, true);
     }
 

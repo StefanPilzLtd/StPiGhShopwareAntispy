@@ -4,7 +4,9 @@ namespace StPiGh\ShopwareAntispy;
 
 use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\ActivateContext;
+use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
+use Shopware\Core\Framework\Plugin\Context\UninstallContext;
 use StPiGh\ShopwareAntispy\DependencyInjection\CompilerPass\DisableShopwareSpyFeaturesPass;
 use StPiGh\ShopwareAntispy\Service\PrivacyStateInstaller;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -32,6 +34,20 @@ class StPiGhShopwareAntispy extends Plugin
         $this->applyPrivacyState();
     }
 
+    public function deactivate(DeactivateContext $deactivateContext): void
+    {
+        $this->revertPrivacyState();
+
+        parent::deactivate($deactivateContext);
+    }
+
+    public function uninstall(UninstallContext $uninstallContext): void
+    {
+        parent::uninstall($uninstallContext);
+
+        $this->revertPrivacyState();
+    }
+
     private function applyPrivacyState(): void
     {
         if (!$this->container?->has(PrivacyStateInstaller::class)) {
@@ -39,5 +55,14 @@ class StPiGhShopwareAntispy extends Plugin
         }
 
         $this->container->get(PrivacyStateInstaller::class)->apply();
+    }
+
+    private function revertPrivacyState(): void
+    {
+        if (!$this->container?->has(PrivacyStateInstaller::class)) {
+            return;
+        }
+
+        $this->container->get(PrivacyStateInstaller::class)->revert();
     }
 }

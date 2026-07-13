@@ -6,18 +6,62 @@
     <services>
         <defaults autowire="true" autoconfigure="false" public="false"/>
 
+        <service id="StPiGh\ShopwareAntispy\Service\AntispyConfig"/>
+
         <service id="StPiGh\ShopwareAntispy\Service\PrivacyStateInstaller" public="true"/>
 
         <service id="StPiGh\ShopwareAntispy\Subscriber\AdminPrivacySubscriber">
             <argument>%shopware_administration.path_name%</argument>
+            <argument type="service" id="StPiGh\ShopwareAntispy\Service\AntispyConfig"/>
             <tag name="kernel.event_subscriber"/>
         </service>
 
-        <service id="shopware.store_client" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" public="true" lazy="true"/>
-        <service id="shopware.frw_client" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" public="true" lazy="true"/>
-        <service id="shopware.store_download_client" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" public="true"/>
-        <service id="shopware.app_system.guzzle" class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient" lazy="true"/>
+        <service id="StPiGh\ShopwareAntispy\Subscriber\ConfigToggleSubscriber">
+            <tag name="kernel.event_subscriber"/>
+        </service>
 
+        <!--
+            Configurable channels: the original client stays available as
+            ".inner" and is only used when the shop owner opted in via the
+            plugin configuration. Default (no config value) blocks.
+        -->
+        <service id="stpigh_antispy.blocking.store_client"
+                 class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient"
+                 decorates="shopware.store_client" public="true" lazy="true">
+            <argument type="service" id="stpigh_antispy.blocking.store_client.inner"/>
+            <argument type="service" id="StPiGh\ShopwareAntispy\Service\AntispyConfig"/>
+            <argument type="constant">StPiGh\ShopwareAntispy\Service\AntispyConfig::ALLOW_STORE_COMMUNICATION</argument>
+        </service>
+
+        <service id="stpigh_antispy.blocking.frw_client"
+                 class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient"
+                 decorates="shopware.frw_client" public="true" lazy="true">
+            <argument type="service" id="stpigh_antispy.blocking.frw_client.inner"/>
+            <argument type="service" id="StPiGh\ShopwareAntispy\Service\AntispyConfig"/>
+            <argument type="constant">StPiGh\ShopwareAntispy\Service\AntispyConfig::ALLOW_STORE_COMMUNICATION</argument>
+        </service>
+
+        <service id="stpigh_antispy.blocking.store_download_client"
+                 class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient"
+                 decorates="shopware.store_download_client" public="true">
+            <argument type="service" id="stpigh_antispy.blocking.store_download_client.inner"/>
+            <argument type="service" id="StPiGh\ShopwareAntispy\Service\AntispyConfig"/>
+            <argument type="constant">StPiGh\ShopwareAntispy\Service\AntispyConfig::ALLOW_STORE_COMMUNICATION</argument>
+        </service>
+
+        <service id="stpigh_antispy.blocking.app_system_client"
+                 class="StPiGh\ShopwareAntispy\Http\BlockingGuzzleClient"
+                 decorates="shopware.app_system.guzzle" lazy="true">
+            <argument type="service" id="stpigh_antispy.blocking.app_system_client.inner"/>
+            <argument type="service" id="StPiGh\ShopwareAntispy\Service\AntispyConfig"/>
+            <argument type="constant">StPiGh\ShopwareAntispy\Service\AntispyConfig::ALLOW_APP_SERVER_COMMUNICATION</argument>
+        </service>
+
+        <!--
+            Non-negotiable channels: telemetry, usage data (GMV, orders,
+            entity sync) and the service registry are always blocked and
+            intentionally have no configuration toggle.
+        -->
         <service id="shopware.usage_data.gateway.client" class="StPiGh\ShopwareAntispy\Http\BlockingHttpClient" public="true"/>
         <service id="service_registry.http_client" class="StPiGh\ShopwareAntispy\Http\BlockingHttpClient"/>
     </services>
