@@ -62,15 +62,17 @@ class AdminPrivacySubscriber implements EventSubscriberInterface
         $response->headers->set('Permissions-Policy', 'browsing-topics=(), interest-cohort=()');
         $response->headers->set('Referrer-Policy', 'same-origin');
 
-        // App admin modules are embedded as iframes; frame-src only opens up
-        // when app server communication is explicitly allowed via config.
-        $frameSrc = $this->antispyConfig->isAllowed(AntispyConfig::ALLOW_APP_SERVER_COMMUNICATION)
-            ? 'https:'
-            : "'self'";
+        // App admin modules are embedded as iframes. Keep the default closed,
+        // but allow explicitly configured app origins without opening every app server.
+        $frameSources = ["'self'"];
+        if ($this->antispyConfig->isAllowed(AntispyConfig::ALLOW_APP_SERVER_COMMUNICATION)) {
+            $frameSources[] = 'https:';
+        }
+        array_push($frameSources, ...$this->antispyConfig->allowedAppServerOrigins());
 
         $response->headers->set(
             'Content-Security-Policy',
-            \sprintf("connect-src 'self'; frame-src %s; object-src 'none'; base-uri 'self'", $frameSrc)
+            \sprintf("connect-src 'self'; frame-src %s; object-src 'none'; base-uri 'self'", implode(' ', array_unique($frameSources)))
         );
     }
 }

@@ -25,6 +25,7 @@ Antispy → Konfiguration*:
 | --- | --- |
 | Shopware-Store-Kommunikation erlauben | api.shopware.com wieder erreichbar: Update-Benachrichtigungen, Lizenzprüfungen, Store-Downloads, First Run Wizard. `core.store.apiUri` wird automatisch wiederhergestellt bzw. beim Ausschalten wieder auf `http://127.0.0.1` geparkt. Hinweis: Plugin-Icons in der Erweiterungsliste kommen dann wieder vom Store-CDN (AWS). |
 | App-Server-Kommunikation erlauben | Ausgehende Requests des App-Systems (Registrierung, Webhooks, Action Buttons) und App-Module (iframes) in der Administration. Nötig, wenn der Shop Dritt-Apps mit eigenem Backend nutzt. |
+| Erlaubte App-Server-Ursprünge | Exakte, getrennte Ursprünge wie `https://apps.example.com`. Erlaubt nur diese App-Server, während die allgemeine App-Server-Kommunikation blockiert bleibt. |
 
 Die Schalter greifen sofort (Laufzeitprüfung, fail-closed) — kein
 `cache:clear` nötig. Ist die Konfiguration nicht lesbar, wird blockiert.

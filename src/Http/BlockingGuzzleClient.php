@@ -27,7 +27,7 @@ class BlockingGuzzleClient extends Client
 
     public function request(string $method, $uri = '', array $options = []): ResponseInterface
     {
-        if ($this->passThrough()) {
+        if ($this->passThrough((string) $uri)) {
             return $this->inner->request($method, $uri, $options);
         }
 
@@ -36,7 +36,7 @@ class BlockingGuzzleClient extends Client
 
     public function requestAsync(string $method, $uri = '', array $options = []): PromiseInterface
     {
-        if ($this->passThrough()) {
+        if ($this->passThrough((string) $uri)) {
             return $this->inner->requestAsync($method, $uri, $options);
         }
 
@@ -45,7 +45,7 @@ class BlockingGuzzleClient extends Client
 
     public function send(RequestInterface $request, array $options = []): ResponseInterface
     {
-        if ($this->passThrough()) {
+        if ($this->passThrough((string) $request->getUri())) {
             return $this->inner->send($request, $options);
         }
 
@@ -54,7 +54,7 @@ class BlockingGuzzleClient extends Client
 
     public function sendAsync(RequestInterface $request, array $options = []): PromiseInterface
     {
-        if ($this->passThrough()) {
+        if ($this->passThrough((string) $request->getUri())) {
             return $this->inner->sendAsync($request, $options);
         }
 
@@ -63,19 +63,25 @@ class BlockingGuzzleClient extends Client
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        if ($this->passThrough()) {
+        if ($this->passThrough((string) $request->getUri())) {
             return $this->inner->sendRequest($request);
         }
 
         return $this->responseFor((string) $request->getUri());
     }
 
-    private function passThrough(): bool
+    private function passThrough(string $uri): bool
     {
-        return $this->inner !== null
-            && $this->config !== null
-            && $this->allowConfigKey !== null
-            && $this->config->isAllowed($this->allowConfigKey);
+        if ($this->inner === null || $this->config === null || $this->allowConfigKey === null) {
+            return false;
+        }
+
+        if ($this->config->isAllowed($this->allowConfigKey)) {
+            return true;
+        }
+
+        return $this->allowConfigKey === AntispyConfig::ALLOW_APP_SERVER_COMMUNICATION
+            && $this->config->isAppServerUriAllowed($uri);
     }
 
     private function responseFor(string $uri): ResponseInterface

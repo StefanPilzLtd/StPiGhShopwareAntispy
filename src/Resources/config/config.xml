@@ -14,6 +14,14 @@
             <defaultValue>false</defaultValue>
         </input-field>
 
+        <input-field type="text">
+            <name>allowedAppServerOrigins</name>
+            <label>Allowed app server origins</label>
+            <label lang="de-DE">Erlaubte App-Server-Ursprünge</label>
+            <helpText>Optional exact origins separated by spaces, commas or line breaks, for example https://apps.example.com. These origins work even while general app-server communication remains disabled.</helpText>
+            <helpText lang="de-DE">Optionale exakte Ursprünge, getrennt durch Leerzeichen, Kommas oder Zeilenumbrüche, zum Beispiel https://apps.example.com. Diese Ursprünge funktionieren auch dann, wenn die allgemeine App-Server-Kommunikation deaktiviert bleibt.</helpText>
+        </input-field>
+
         <input-field type="bool">
             <name>allowAppServerCommunication</name>
             <label>Allow app server communication</label>
