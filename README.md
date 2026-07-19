@@ -46,6 +46,19 @@ bin/console cache:clear
 
 On deactivate or uninstall the shop state is restored: `core.store.apiUri` back to `https://api.shopware.com`, blocked scheduled tasks re‑enabled, `core.usageData.lastEntitySyncRunDate` removed. Deactivated service apps are intentionally **not** re‑enabled automatically.
 
+## About the author
+
+Built and maintained by **Stefan Pilz** — freelance **Shopware developer**.
+
+I develop **custom Shopware 6 plugins & themes on commission**, plus API integrations, performance optimization, SEO/GEO and ongoing shop maintenance. Available for freelance projects and long‑term collaborations.
+
+- 🌐 **Website:** [stefanpilz.ltd](https://stefanpilz.ltd)
+- ✉️ **Contact:** [contact@stefanpilz.ltd](mailto:contact@stefanpilz.ltd)
+- 🧩 **Plugin & project inquiries:** [plugins@stefanpilz.ltd](mailto:plugins@stefanpilz.ltd)
+- 🐙 **GitHub:** [@StefanPilzLtd](https://github.com/StefanPilzLtd)
+
+If this plugin is useful to you, a ⭐ on GitHub is appreciated.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
