@@ -1,41 +1,38 @@
 # StPiGh Shopware Antispy
 
-Shopware-6.7-Plugin zum Blockieren von Shopware-Services, Usage Data,
-Store-/Tracking-Clients, Product Analytics, GMV/Analytics-Apps und
-Third-Party-Aufrufen aus der Administration.
+Blocks Shopware telemetry, usage data, store/tracking clients, product analytics, GMV/analytics apps and third‑party calls from the Administration.
 
-**Default: alles blockiert.** Einzelne Kanäle mit legitimem Nutzen lassen
-sich per Plugin-Konfiguration gezielt wieder erlauben (Opt-in).
+**Fail‑closed by design: everything is blocked by default.** Individual channels with a legitimate use can be re‑enabled per plugin configuration (opt‑in).
 
-## Was immer blockiert bleibt (nicht konfigurierbar)
+![Shopware](https://img.shields.io/badge/Shopware-6.7-189eff)
+![PHP](https://img.shields.io/badge/PHP-8.2%20–%208.5-777bb4)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-- Usage Data / Entity Sync (GMV, Bestellungen, Kataloggrößen, ...)
-- Telemetrie (Plugin-, App-, Cache-, MessageQueue-, DAL-Telemetry)
-- Product Analytics / Analytics Gateway
-- Service Registry & Shopware-Service-Apps (werden bei Installation deaktiviert)
-- Tracking-Events des Store-Clients
-- Cross-Origin-Requests aus der Administration (fetch/XHR/sendBeacon)
+## Always blocked (not configurable)
 
-## Konfigurierbare Ausnahmen (Standard: aus)
+- Usage Data / entity sync (GMV, orders, catalogue sizes, …)
+- Telemetry (plugin, app, cache, message queue, DAL telemetry)
+- Product Analytics / analytics gateway
+- Service Registry & Shopware service apps (deactivated on install)
+- Tracking events of the store client
+- Cross‑origin requests from the Administration (fetch / XHR / sendBeacon)
 
-Einstellungen unter *Erweiterungen → Meine Erweiterungen → StPiGh Shopware
-Antispy → Konfiguration*:
+## Configurable exceptions (default: off)
 
-| Schalter | Wirkung wenn aktiviert |
-| --- | --- |
-| Shopware-Store-Kommunikation erlauben | api.shopware.com wieder erreichbar: Update-Benachrichtigungen, Lizenzprüfungen, Store-Downloads, First Run Wizard. `core.store.apiUri` wird automatisch wiederhergestellt bzw. beim Ausschalten wieder auf `http://127.0.0.1` geparkt. Hinweis: Plugin-Icons in der Erweiterungsliste kommen dann wieder vom Store-CDN (AWS). |
-| App-Server-Kommunikation erlauben | Ausgehende Requests des App-Systems (Registrierung, Webhooks, Action Buttons) und App-Module (iframes) in der Administration. Nötig, wenn der Shop Dritt-Apps mit eigenem Backend nutzt. |
-| Erlaubte App-Server-Ursprünge | Exakte, getrennte Ursprünge wie `https://apps.example.com`. Erlaubt nur diese App-Server, während die allgemeine App-Server-Kommunikation blockiert bleibt. |
+*Extensions → My extensions → StPiGh Shopware Antispy → Configuration*:
 
-Die Schalter greifen sofort (Laufzeitprüfung, fail-closed) — kein
-`cache:clear` nötig. Ist die Konfiguration nicht lesbar, wird blockiert.
+| Setting | Effect when enabled |
+|---|---|
+| **Allow Shopware store communication** | Makes `api.shopware.com` reachable again: update notifications, licence checks, store downloads, First Run Wizard. `core.store.apiUri` is restored automatically (and parked back to `http://127.0.0.1` when disabled). Note: extension icons then come from the store CDN (AWS) again. |
+| **Allow app server communication** | Outgoing app‑system requests (registration, webhooks, action buttons) and app modules (iframes) in the Administration. Needed when the shop uses third‑party apps with their own backend. |
+| **Allowed app server origins** | Exact, comma/newline‑separated origins such as `https://apps.example.com`. Allows only these app servers while general app‑server communication stays blocked. |
 
-## Deaktivieren / Deinstallieren
+Switches take effect immediately (runtime check, fail‑closed) — no `cache:clear` needed. If the configuration cannot be read, the request is blocked.
 
-Beim Deaktivieren oder Deinstallieren wird der Shop-Zustand zurückgesetzt:
-`core.store.apiUri` auf `https://api.shopware.com`, blockierte Scheduled
-Tasks wieder aktiv, `core.usageData.lastEntitySyncRunDate` entfernt.
-Deaktivierte Service-Apps werden bewusst **nicht** automatisch reaktiviert.
+## Requirements
+
+- Shopware 6.7
+- PHP 8.2 – 8.5
 
 ## Installation
 
@@ -43,5 +40,12 @@ Deaktivierte Service-Apps werden bewusst **nicht** automatisch reaktiviert.
 bin/console plugin:refresh
 bin/console plugin:install --activate StPiGhShopwareAntispy
 bin/console cache:clear
-bin/build-administration.sh
 ```
+
+## Deactivate / uninstall
+
+On deactivate or uninstall the shop state is restored: `core.store.apiUri` back to `https://api.shopware.com`, blocked scheduled tasks re‑enabled, `core.usageData.lastEntitySyncRunDate` removed. Deactivated service apps are intentionally **not** re‑enabled automatically.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
