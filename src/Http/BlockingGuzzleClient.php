@@ -10,6 +10,25 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use StPiGh\ShopwareAntispy\Service\AntispyConfig;
 
+/**
+ * Drop-in replacement for Shopware's Guzzle clients (store, FRW, store download,
+ * app system) that blocks outbound requests unless the shop owner opted in.
+ *
+ * INTENTIONAL: this class extends the (soft-)`@final` {@see \GuzzleHttp\Client}
+ * on purpose. Implementing `ClientInterface` instead is NOT possible here,
+ * because several Shopware core consumers type-hint the *concrete*
+ * `GuzzleHttp\Client` (e.g. {@see \Shopware\Core\Framework\App\Lifecycle\Registration\AppRegistrationService})
+ * and would fail with a TypeError. A Guzzle-middleware approach is also not
+ * universally available: `shopware.store_download_client` is a plain
+ * `new Client()` with no factory/middleware hook, so a clean middleware
+ * injection would require overriding Shopware core service definitions
+ * (fragile across versions).
+ *
+ * Guzzle marks `Client` as `@final` only via docblock (not the `final` keyword),
+ * so extending it is legal. The "considered final" notice is emitted by
+ * Symfony's DebugClassLoader in DEBUG mode only and never appears in production
+ * (`APP_DEBUG=false`). This is a documented, deliberate trade-off.
+ */
 class BlockingGuzzleClient extends Client
 {
     /**
