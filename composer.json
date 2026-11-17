@@ -1,7 +1,7 @@
 {
     "name": "stpi/stpigh-shopware-antispy",
     "description": "Blocks Shopware telemetry, usage data, service/store clients, product analytics and third-party admin calls. Fail-closed, opt-in exceptions.",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "type": "shopware-platform-plugin",
     "license": "MIT",
     "keywords": [

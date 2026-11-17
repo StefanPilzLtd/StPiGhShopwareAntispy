@@ -12,6 +12,7 @@ class PrivacyStateInstaller
         'usage_data.entity_data.collect',
         'in-app-purchase.update',
         'services.install',
+        'translation.update',
     ];
 
     public function __construct(

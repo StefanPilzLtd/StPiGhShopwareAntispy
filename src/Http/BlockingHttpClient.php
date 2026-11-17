@@ -20,6 +20,16 @@ class BlockingHttpClient extends MockHttpClient
 
     private function createResponse(string $method, string $url, array $options): ResponseInterface
     {
+        // Update check (Shopware\Core\Framework\Update\Services\ApiClient): an empty version index
+        // plus 404 on the changelog makes core report "no update available" without errors.
+        // The recovery tool download is answered with 404 so a web update fails visibly.
+        if (str_contains($url, 'releases.shopware.com/changelog/index.json')) {
+            return $this->jsonResponse([], 200);
+        }
+        if (str_contains($url, 'releases.shopware.com') || str_contains($url, 'shopware/web-installer')) {
+            return $this->jsonResponse(['blocked' => true], 404);
+        }
+
         $payload = match (true) {
             str_contains($url, '/killswitch') => ['killswitch' => true],
             str_contains($url, '/v1/consent') || str_contains($url, '/api/consent') => ['blocked' => true],
@@ -27,8 +37,16 @@ class BlockingHttpClient extends MockHttpClient
             default => ['blocked' => true],
         };
 
+        return $this->jsonResponse($payload, str_contains($url, '/api/consent') ? 202 : 200);
+    }
+
+    /**
+     * @param array<mixed> $payload
+     */
+    private function jsonResponse(array $payload, int $status): ResponseInterface
+    {
         return new MockResponse(json_encode($payload, \JSON_THROW_ON_ERROR), [
-            'http_code' => str_contains($url, '/api/consent') ? 202 : 200,
+            'http_code' => $status,
             'response_headers' => [
                 'Content-Type: application/json',
                 'X-StPiGh-Shopware-Antispy: blocked',

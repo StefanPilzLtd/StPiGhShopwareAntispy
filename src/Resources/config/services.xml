@@ -62,6 +62,16 @@
             entity sync) and the service registry are always blocked and
             intentionally have no configuration toggle.
         -->
+        <!--
+            Shared Symfony http_client: requests to Shopware, fos.gg and
+            Cloudflare hosts are blocked, all other hosts pass through.
+        -->
+        <service id="stpigh_antispy.host_filtering.http_client"
+                 class="StPiGh\ShopwareAntispy\Http\HostFilteringHttpClient"
+                 decorates="http_client">
+            <argument type="service" id="stpigh_antispy.host_filtering.http_client.inner"/>
+        </service>
+
         <service id="shopware.usage_data.gateway.client" class="StPiGh\ShopwareAntispy\Http\BlockingHttpClient" public="true"/>
         <service id="service_registry.http_client" class="StPiGh\ShopwareAntispy\Http\BlockingHttpClient"/>
     </services>

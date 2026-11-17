@@ -3,10 +3,23 @@
 namespace StPiGh\ShopwareAntispy\DependencyInjection\CompilerPass;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use StPiGh\ShopwareAntispy\Http\BlockingHttpClient;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 
 class DisableShopwareSpyFeaturesPass implements CompilerPassInterface
 {
+    private const UPDATE_API_CLIENT = 'Shopware\Core\Framework\Update\Services\ApiClient';
+
+    /**
+     * Third-party checks that open their own HTTP connection (bypassing every
+     * injectable client) and can therefore only be switched off entirely.
+     * FroshTools SystemTimeChecker: `new GuzzleHttp\Client()` to cloudflare.com.
+     */
+    private const UNINTERCEPTABLE_SERVICES = [
+        'Frosh\Tools\Components\Health\Checker\HealthChecker\SystemTimeChecker' => 'frosh_tools.health_checker',
+    ];
+
     private const SERVICE_MATCHERS = [
         'Shopware\Core\System\UsageData\Subscriber\EntityDeleteSubscriber',
         'Shopware\Core\System\UsageData\Subscriber\ConsentStateChangedSubscriber',
@@ -50,6 +63,15 @@ class DisableShopwareSpyFeaturesPass implements CompilerPassInterface
         $container->setParameter('shopware.usage_data.gateway.base_uri', 'http://127.0.0.1');
         $container->setParameter('shopware.usage_data.gateway.batch_size', 1);
 
+        // Daily translation download from GitHub (translation.update). A manual
+        // `translation:install` stays possible because the shop owner triggers it.
+        $container->setParameter('shopware.translation.scheduled_task.enabled', false);
+
+        // Admin update check contacts releases.shopware.com on every login.
+        if ($container->hasDefinition(self::UPDATE_API_CLIENT)) {
+            $container->getDefinition(self::UPDATE_API_CLIENT)->replaceArgument(0, new Definition(BlockingHttpClient::class));
+        }
+
         foreach ($container->getDefinitions() as $serviceId => $definition) {
             $class = $definition->getClass();
 
@@ -61,6 +83,13 @@ class DisableShopwareSpyFeaturesPass implements CompilerPassInterface
             $definition->clearTag('kernel.event_listener');
             $definition->clearTag('messenger.message_handler');
             $definition->clearTag('shopware.scheduled.task');
+        }
+
+        foreach ($container->getDefinitions() as $serviceId => $definition) {
+            $tag = self::UNINTERCEPTABLE_SERVICES[$definition->getClass() ?? $serviceId] ?? null;
+            if ($tag !== null) {
+                $definition->clearTag($tag);
+            }
         }
 
         foreach (array_keys($container->findTaggedServiceIds('shopware.metric_transport_factory')) as $serviceId) {
