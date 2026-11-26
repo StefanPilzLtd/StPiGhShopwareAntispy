@@ -1,97 +1,123 @@
 # StPiGh Shopware Antispy
 
-Blocks Shopware telemetry, usage data, store/tracking clients, product analytics, GMV/analytics apps and third‑party calls from the Administration.
+**Weniger automatische Datenübertragung an Shopware. Bewusst entscheiden, welche externen Dienste dein Shop benötigt.**
 
-**Fail‑closed by design: everything is blocked by default.** Individual channels with a legitimate use can be re‑enabled per plugin configuration (opt‑in).
+Das kostenlose Open-Source-Plugin schränkt Telemetrie, Nutzungsdatenübertragung und ausgewählte externe Verbindungen in selbst gehosteten Shopware-6.7-Shops ein. Store- und App-Verbindungen sind zunächst gesperrt und lassen sich teilweise freigeben.
 
-![Shopware](https://img.shields.io/badge/Shopware-6.7-189eff)
-![PHP](https://img.shields.io/badge/PHP-8.2%20–%208.5-777bb4)
-![License](https://img.shields.io/badge/license-MIT-green)
+Deutsch | [English](README.en.md) · [Technische Details](docs/TECHNICAL-NOTES.md) · [Änderungen](CHANGELOG.md) · [Fehler melden](https://github.com/StefanPilzLtd/StPiGhShopwareAntispy/issues)
 
-## Always blocked (not configurable)
+## Passt das Plugin zu deinem Shop?
 
-- Usage Data / entity sync (GMV, orders, catalogue sizes, …)
-- Telemetry (plugin, app, cache, message queue, DAL telemetry)
-- Product Analytics / analytics gateway
-- Service Registry & Shopware service apps (deactivated on install)
-- Tracking events of the store client
-- Cross‑origin requests from the Administration (fetch / XHR / sendBeacon)
+Sinnvoll für Betreiber, die ihren selbst gehosteten Shop unabhängig verwalten und die aufgeführten Verbindungen bewusst einschränken möchten. Du brauchst Zugriff auf Shop-Dateien, Kommandozeile und Administration-Build oder einen technischen Dienstleister.
 
-## Configurable exceptions (default: off)
+**Vor dem Einsatz beachten:**
 
-*Extensions → My extensions → StPiGh Shopware Antispy → Configuration*:
+- **Updates selbst überwachen:** Die Update-Prüfung der Administration wird blockiert. „Kein Update verfügbar“ bestätigt mit aktivem Plugin keinen aktuellen Shop. Plane Core-Updates über deinen Deployment-/Composer-Prozess und beobachte die [offiziellen Release Notes](https://developer.shopware.com/release-notes/).
+- **Apps und Integrationen prüfen:** App-Registrierung, Webhooks und Aktionsbuttons können ausfallen. Bei Installation und Aktivierung werden außerdem aktive Apps anhand ihrer Namen, Pfade oder übersetzten Bezeichnungen deaktiviert, unter anderem bei Treffern auf `analytics` oder `gmv`. Das kann Drittanbieter-Apps betreffen; sie werden später nicht automatisch reaktiviert.
+- **Verträge vorher klären:** Usage-Data-/GMV-Verbindungen bleiben auch mit Ausnahmen gesperrt. Prüfe vor Aktivierung die [Meldepflichten und benötigten Dienste](#community-edition-account-und-verträge).
+- **Zuerst in Staging prüfen:** Teste Administration, Bestellung, Zahlung, Versand, ERP und Apps mit deiner konkreten Erweiterungskombination.
 
-| Setting | Effect when enabled |
+## Was wird eingeschränkt?
+
+| Bereich | Verhalten bei aktivem Plugin | Folge für den Betrieb |
+|---|---|---|
+| Nutzungsdaten und Telemetrie | Zugehörige Subscriber, Handler und Tasks werden entkoppelt; Usage-Data-Client wird lokal beantwortet. | Automatische Übertragung über diese Wege wird unterbunden. |
+| Shopware Services und Analytics | Registry-Verbindung wird blockiert; passende Apps werden bei Installation/Aktivierung deaktiviert. | Betroffene Service- und Analysefunktionen stehen nicht wie gewohnt bereit. |
+| Store und App-System | Eingebundene HTTP-Clients sind standardmäßig gesperrt. | Store-Downloads, Lizenzabfragen und App-Verbindungen benötigen Ausnahmen; weitere Sperren können trotzdem greifen. |
+| Administration im Browser | Direkte externe `fetch`-/XHR-/Beacon-Aufrufe werden blockiert; App-Iframes sind zunächst auf dieselbe Origin begrenzt. | Externe Admin-Integrationen können betroffen sein. |
+| Core-Update und Übersetzungen | Admin-Update-Prüfung und täglicher Task `translation.update` werden blockiert. | Updates und Übersetzungsaktualisierung selbst organisieren. |
+| Gemeinsamer Symfony-HTTP-Client | Filtert `shopware.com`, `shopware.io`, `shopware.de`, `shopware.store`, `fos.gg`, `cloudflare.com` und deren Subdomains. | Auch Aufrufe anderer Plugins über diesen Client können mit lokalem HTTP 403 scheitern. Der FroshTools-Systemzeitcheck wird zusätzlich deaktiviert. |
+
+**Der Schutz ist auf die eingebundenen Wege begrenzt.** Das Plugin ist keine Firewall für den gesamten Shop. Eigene HTTP-Clients anderer Plugins, Weiterleitungen und andere Browser-Ressourcen sind nicht vollständig kontrolliert. Externe Bilder und Skripte werden nicht generell blockiert. Storefront-Tracking und Cookie-Einwilligungen werden nicht verwaltet. Daraus folgt weder ein DSGVO-Nachweis noch vollständiger Schutz vor jeder Datenübertragung.
+
+## Voraussetzungen und Prüfstand
+
+- Selbst gehostetes Shopware **6.7.x** mit Administration; kein Installationsweg für Shopware SaaS.
+- Die [Plugin-Metadaten](composer.json) erlauben PHP ab **8.2 innerhalb von PHP 8**. Zusätzlich gelten die Anforderungen deiner konkreten Shopware-Version und ihrer Abhängigkeiten. Das ist keine geprüfte PHP-Versionsmatrix.
+- Das [Changelog zu 1.2.0](CHANGELOG.md#120---2026-11-17) nennt eine frühere Netzwerkprüfung mit Shopware **6.7.16.0**. Das ist keine Freigabe für jede 6.7-Version oder Erweiterungskombination.
+- Das Repository enthält Administration-JavaScript als Quellcode, aber keine vorkompilierten Administration-Dateien. **Ein Administration-Build ist erforderlich.**
+
+## Installation aus dem Repository
+
+Zuerst in einer Testumgebung ausführen. Aktuelle Sicherung bereithalten und aktive Apps sowie eigene Store-API-/Task-Einstellungen notieren: Das Plugin speichert keinen vollständigen Vorher-Zustand.
+
+1. Im **Shopware-Hauptverzeichnis**, in dem `bin/console` liegt:
+
+   ```sh
+   git clone https://github.com/StefanPilzLtd/StPiGhShopwareAntispy.git custom/plugins/StPiGhShopwareAntispy
+   ```
+
+   Alternativ den [Quellcode als ZIP](https://github.com/StefanPilzLtd/StPiGhShopwareAntispy/archive/refs/heads/main.zip) so entpacken, dass `custom/plugins/StPiGhShopwareAntispy/composer.json` existiert. GitHubs Quellcode-ZIP ist kein fertig gebautes Shopware-Upload-Paket.
+
+2. Registrieren und installieren. **Bereits die Installation kann Apps und Einstellungen verändern.**
+
+   ```sh
+   bin/console plugin:refresh
+   bin/console plugin:install --activate StPiGhShopwareAntispy
+   bin/console cache:clear
+   ```
+
+3. Administration mit dem Build-Prozess deines Shops neu erstellen. In Projekten mit dem Standardskript:
+
+   ```sh
+   bin/build-administration.sh
+   ```
+
+   Dafür werden PHP und die zum Shop passende Node.js-/npm-Umgebung benötigt. Bei verwalteten Deployments den vorhandenen Build-Prozess nutzen. Administration anschließend im Browser vollständig neu laden. Ohne Build fehlt der JavaScript-Teil des Schutzes.
+
+## Ausnahmen einstellen
+
+Unter **Erweiterungen → Meine Erweiterungen → StPiGh Shopware Antispy → Konfiguration** für **alle Verkaufskanäle** einstellen. Die serverseitigen Prüfungen lesen die globale Konfiguration.
+
+| Einstellung | Wirkung und Grenze |
 |---|---|
-| **Allow Shopware store communication** | Makes `api.shopware.com` reachable again: update notifications, licence checks, store downloads, First Run Wizard. `core.store.apiUri` is restored automatically (and parked back to `http://127.0.0.1` when disabled). Note: extension icons then come from the store CDN (AWS) again. |
-| **Allow app server communication** | Outgoing app‑system requests (registration, webhooks, action buttons) and app modules (iframes) in the Administration. Needed when the shop uses third‑party apps with their own backend. |
-| **Allowed app server origins** | Exact, comma/newline‑separated origins such as `https://apps.example.com`. Allows only these app servers while general app‑server communication stays blocked. |
+| **Shopware-Store-Kommunikation erlauben** | Gibt die dekorierten Store-, Download- und First-Run-Wizard-Clients frei. `core.store.apiUri` wird auf `https://api.shopware.com` gesetzt, beim Ausschalten auf `http://127.0.0.1`. Die separate Symfony-Host-Sperre, der Admin-Updatecheck, Usage Data und Services bleiben eingeschränkt. Auch `tracking/events` wird auf dem freigegebenen Store-Client durchgereicht. |
+| **Erlaubte App-Server-Ursprünge** | Gibt einzelne Origins für App-System-Client und App-Iframes frei, etwa `https://apps.example.com`. Mehrere Einträge durch Leerzeichen, Kommas oder Zeilenumbrüche trennen. Schema, Host und ausdrücklich angegebener Port müssen passen; Subdomains brauchen eigene Einträge. Pfade begrenzen die Freigabe nicht. |
+| **App-Server-Kommunikation erlauben** | Gibt den App-System-Client allgemein frei und erlaubt HTTPS-App-Iframes. Eine einzelne Origin-Liste ist enger begrenzt. Direkte externe Browser-Aufrufe aus der Administration bleiben in beiden Fällen blockiert. |
 
-Switches take effect immediately (runtime check, fail‑closed) — no `cache:clear` needed. If the configuration cannot be read, the request is blocked.
+Client-Ausnahmen werden zur Laufzeit gelesen; dafür ist kein erneuter Administration-Build nötig. Administration nach Änderungen neu laden, damit neue Iframe-Freigaben greifen. Bei nicht lesbarer Konfiguration bleiben die konfigurierbaren Clients gesperrt. Ausnahmen reaktivieren keine Apps und stellen entfernte Tasks oder Handler nicht wieder her.
 
-## Operating Shopware Community Edition without a Shopware Account
+## Nach der Installation prüfen
 
-**Shopware 6 Community Edition (CE) can be operated independently of the Shopware Account and Extension Store.** Shopware explicitly confirms this in its [Fair Usage Policy FAQ](https://www.shopware.com/de/news/fair-usage-policy-community-edition/). The CE is licensed under the [MIT license](https://opensource.org/licenses/MIT) (see section 22.1 of the [Shopware terms](https://www.shopware.com/de/agb/)). A Shopware Account is **not a technical or licensing prerequisite** for running the open-source CE.
+1. Administration und Erweiterungsverwaltung öffnen. Der Header `X-StPiGh-Shopware-Antispy: active` an Admin-Antworten bestätigt den Subscriber, keine vollständige Netzwerksperre.
+2. In den Browser-Entwicklertools unter **Netzwerk** die Administration neu laden und relevante Abläufe ausführen. Lokale Antworten können erfolgreich aussehen; HTTP 200 allein bestätigt keine externe Verbindung.
+3. App-Zustände, Webhooks und vollständigen Bestellablauf einschließlich Zahlungs-/Versandanbindung prüfen. Benötigte Origins gezielt freigeben und erneut testen.
+4. Ausgehenden **Serververkehr** bei Bedarf mit Hosting-/Netzwerkwerkzeugen kontrollieren. Der Browser zeigt keine serverseitigen Verbindungen.
 
-This matters because **a license to use the CE and a contract to use Shopware's Account/Store services are distinct**:
+Bei Problemen die [technischen Grenzen](docs/TECHNICAL-NOTES.md) prüfen oder das Plugin deaktivieren.
 
-| Situation | What it means |
-|---|---|
-| CE without an Account or Store usage | The open-source shop remains operable. Shopware explicitly says these CE users are excluded from automatic GMV tracking. |
-| CE connected to a Shopware Account and using its services | Contractual Fair Usage / GMV reporting rules can apply; blocking network traffic does **not** terminate these obligations. |
-| CE above EUR 1 million GMV in the last 365 days | Shopware's terms (section 4.2) explicitly envisage CE use **without** an Account. Account/Store access may require a paid plan. |
-| Previously purchased extensions | Shopware says one-time-purchase extensions remain usable, subject to their license terms; Store updates are no longer accessible without an Account. |
-| Rented / subscription extensions | Existing rental contracts must be reviewed and terminated separately. Continued use after expiry is not authorized merely because the CE remains usable. |
-| Core maintenance | CE core updates can still be performed independently (for example via Composer); the operator remains responsible for security and updates. |
+## Deaktivieren und entfernen
 
-Sources: [Shopware Fair Usage Policy FAQ (12 March 2025)](https://www.shopware.com/de/news/fair-usage-policy-community-edition/), [Shopware GMV reporting update (14 April 2026)](https://www.shopware.com/de/news/automatisiertes-gmv-reporting/), [Shopware Terms (updated 10 June 2026), §§ 4, 9, 10, 22, 55](https://www.shopware.com/de/agb/).
+Im Shopware-Hauptverzeichnis:
 
-### Closing a Shopware Account: practical checklist
-
-1. **Check contracts first:** Identify any Rise/Evolve/Beyond plan, extension rentals, third-party app agreements, licenses and paid services. Account closure does not automatically end independent contracts.
-2. **Give notice to Shopware:** For contracts of indefinite duration, section 10.1 of the terms generally states **one month's notice to the end of a calendar month**, unless other agreed terms apply. Section 10.5 requires written notice; section 1.4 expressly allows electronic written declarations without a handwritten signature unless the stricter statutory *Schriftform* is required.
-3. **Request the exact termination date and confirmation:** Shopware's [Community Customer FAQ](https://docs.shopware.com/de/shopware-account/faqs/communitycustomer-faq/) directs Account deletion/closure requests to its sales contact form. Where prior bookings exist, legal retention obligations may mean an Account can only be blocked rather than fully deleted.
-4. **Review extensions and integrations:** Verify which licensed plugins and app backends must be replaced, removed or maintained independently before removing the Account connection.
-5. **Only then configure network restrictions:** After the relevant agreements have actually ended, review which Shopware services the shop no longer needs and test administration, checkout, updates, third-party integrations, scheduled tasks and staging/production behavior.
-
-### Important legal and technical limitations
-
-- **This plugin is not an Account-cancellation or contract-termination mechanism.** It must not be used to misrepresent compliance with existing reporting, license or subscription obligations. Shopware's 2026 GMV article specifically excludes **CE customers who do not use the Account or Store** from automatic tracking; this should not be generalized to customers who still have relevant contracts.
-- **This version blocks GMV/usage-data communication unconditionally.** Operators with a connected Account or other applicable contractual obligations should not activate it without resolving those obligations first.
-- **The plugin also blocks Shopware's Administration update check**, Store communication and numerous cross-origin calls. **Monitor Shopware security releases independently** and test third-party extensions carefully; enabling one exception does not guarantee that every integration is restored.
-- **Deactivation does not automatically reactivate apps disabled during installation.** Review extension states and scheduled tasks before and after removal.
-- These notes summarize public Shopware documentation, **not individual legal advice**. The operator is responsible for verifying the terms applicable to their Account, subscriptions and extensions.
-
-## Requirements
-
-- Shopware 6.7
-- PHP 8.2 – 8.5
-
-## Installation
-
-```bash
-bin/console plugin:refresh
-bin/console plugin:install --activate StPiGhShopwareAntispy
+```sh
+bin/console plugin:deactivate StPiGhShopwareAntispy
 bin/console cache:clear
+bin/build-administration.sh
 ```
 
-## Deactivate / uninstall
+Bei abweichenden Deployment-Prozessen deren Administration-Build verwenden. Anschließend den Browser vollständig neu laden. Für die anschließende Deinstallation:
 
-On deactivate or uninstall the shop state is restored: `core.store.apiUri` back to `https://api.shopware.com`, blocked scheduled tasks re‑enabled, `core.usageData.lastEntitySyncRunDate` removed. Deactivated service apps are intentionally **not** re‑enabled automatically.
+```sh
+bin/console plugin:uninstall StPiGhShopwareAntispy
+```
 
-## About the author
+Deaktivierung und Deinstallation setzen `core.store.apiUri` auf den **Standardwert** `https://api.shopware.com`, löschen `core.usageData.lastEntitySyncRunDate` und setzen vier betroffene Tasks auf `scheduled` mit sofort fälligem Ausführungszeitpunkt. **Frühere individuelle Werte oder zuvor inaktive Tasks werden nicht rekonstruiert.** Deaktivierte Apps bleiben deaktiviert. Auch `--keep-user-data` verhindert die Rücknahme im Uninstall-Hook nicht. Eigene Einstellungen kontrollieren und benötigte Apps einzeln reaktivieren.
 
-Built and maintained by **Stefan Pilz** — freelance **Shopware developer**.
+## Community Edition, Account und Verträge
 
-I develop **custom Shopware 6 plugins & themes on commission**, plus API integrations, performance optimization, SEO/GEO and ongoing shop maintenance. Available for freelance projects and long‑term collaborations.
+Die Community Edition lässt sich laut Shopware auch ohne Account und Store betreiben. Die Open-Source-Lizenz und Verträge über zusätzliche Dienste sind getrennt zu prüfen. Das Plugin kündigt keinen Vertrag, löscht keinen Account und ersetzt keine Lizenz oder vereinbarte GMV-Meldung.
 
-- 🌐 **Website:** [stefanpilz.ltd](https://stefanpilz.ltd)
-- ✉️ **Contact:** [contact@stefanpilz.ltd](mailto:contact@stefanpilz.ltd)
-- 🧩 **Plugin & project inquiries:** [plugins@stefanpilz.ltd](mailto:plugins@stefanpilz.ltd)
-- 🐙 **GitHub:** [@StefanPilzLtd](https://github.com/StefanPilzLtd)
+Shopwares [GMV-Mitteilung vom 14.04.2026](https://www.shopware.com/de/news/automatisiertes-gmv-reporting/) nimmt CE-Nutzer ohne Account-/Store-Nutzung vom automatischen Tracking aus. Für verbundene CE-Shops und Plan-Kunden nennt sie Meldepflichten. Weil das Plugin die betreffenden Verbindungen unabhängig von Store-Ausnahmen sperrt, diese Pflichten vor Aktivierung klären.
 
-If this plugin is useful to you, a ⭐ on GitHub is appreciated.
+Bei einem Wechsel ohne Account: Verträge, Laufzeiten und Erweiterungslizenzen erfassen; Kündigung und Account-Schließung mit Shopware abstimmen und bestätigen lassen; Updates und benötigte Ersatzdienste organisieren. Bloßes Abmelden oder Blockieren beendet keine Verträge. Einmalkauf und Miete haben unterschiedliche Nutzungsrechte.
 
-## License
+Quellen, geprüft am **26.11.2026**: [Fair Usage FAQ](https://www.shopware.com/de/news/fair-usage-policy-community-edition/), [GMV-Reporting](https://www.shopware.com/de/news/automatisiertes-gmv-reporting/), [Shopware-AGB, insbesondere Ziffern 4, 9, 10 und 22](https://www.shopware.com/de/agb/). Maßgeblich sind die jeweiligen Vereinbarungen; diese Übersicht ist keine individuelle Rechtsberatung.
 
-MIT — see [LICENSE](LICENSE).
+## Hilfe und Entwicklung
+
+Ein unabhängiges Community-Projekt von **Stefan Pilz**. Keine offizielle Shopware-Erweiterung. Kostenlos unter der [MIT-Lizenz](LICENSE), ohne zugesicherte Eignung für jede Shop-Konfiguration.
+
+[Fehler melden](https://github.com/StefanPilzLtd/StPiGhShopwareAntispy/issues): Plugin-, Shopware- und PHP-Version, betroffene Integration und Schritte zum Nachstellen angeben. Zugangsdaten, Kundendaten und private Logs vor dem Veröffentlichen entfernen.
+
+Für Einrichtung, eigene Shopware-Plugins, Themes und Schnittstellen: [stefanpilz.ltd](https://stefanpilz.ltd) · [plugins@stefanpilz.ltd](mailto:plugins@stefanpilz.ltd) · [GitHub](https://github.com/StefanPilzLtd).

@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- Add a German operator guide and an English equivalent with source installation, required Administration build, staging checks and removal instructions.
+- Clarify the scope of network blocking, Store/app exceptions, tracking pass-through, app deactivation and rollback to defaults rather than previous settings.
+- Review Account/Store and GMV guidance against official Shopware sources on 26 November 2026; remove reliance on the currently unavailable Account-closure FAQ.
+- Distinguish declared dependency constraints from historical verification and an untested compatibility matrix.
+- Align Composer descriptions and German/English configuration help with the implementation. No blocking behavior or dependency constraints changed.
+
 ## [1.2.0] - 2026-11-17
 
 ### Added

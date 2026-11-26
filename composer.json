@@ -1,6 +1,6 @@
 {
     "name": "stpi/stpigh-shopware-antispy",
-    "description": "Blocks Shopware telemetry, usage data, service/store clients, product analytics and third-party admin calls. Fail-closed, opt-in exceptions.",
+    "description": "Restricts Shopware telemetry, usage-data transfers and selected external connections in self-hosted Shopware 6.7 shops. Optional Store and app exceptions.",
     "version": "1.2.0",
     "type": "shopware-platform-plugin",
     "license": "MIT",
@@ -46,8 +46,8 @@
             "en-GB": "StPiGh Shopware Antispy"
         },
         "description": {
-            "de-DE": "Blockiert Shopware-Services, Usage Data, Analytics, GMV und Third-Party-Aufrufe aus der Administration.",
-            "en-GB": "Blocks Shopware services, usage data, analytics, GMV and third-party calls from the administration."
+            "de-DE": "Schränkt Shopware-Telemetrie, Nutzungsdatenübertragung und ausgewählte externe Verbindungen ein. Store- und App-Ausnahmen konfigurierbar; Updates und Integrationen gesondert prüfen.",
+            "en-GB": "Restricts Shopware telemetry, usage-data transfers and selected external connections. Configurable Store and app exceptions; review updates and integrations separately."
         },
         "manufacturerLink": {
             "de-DE": "https://stefanpilz.ltd",

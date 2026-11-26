@@ -2,15 +2,15 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/trunk/src/Core/System/SystemConfig/Schema/config.xsd">
     <card>
-        <title>Exceptions (default: everything is blocked)</title>
-        <title lang="de-DE">Ausnahmen (Standard: alles blockiert)</title>
+        <title>Store and app exceptions (blocked by default)</title>
+        <title lang="de-DE">Store- und App-Ausnahmen (standardmäßig gesperrt)</title>
 
         <input-field type="bool">
             <name>allowStoreCommunication</name>
             <label>Allow Shopware Store communication</label>
             <label lang="de-DE">Shopware-Store-Kommunikation erlauben</label>
-            <helpText>Re-enables api.shopware.com: update notifications, license checks, store downloads and the First Run Wizard. Note: the extension listing will then load plugin icons from the Shopware store CDN (AWS) again. Telemetry, usage data, GMV/analytics and the service registry remain blocked regardless of this setting.</helpText>
-            <helpText lang="de-DE">Aktiviert api.shopware.com wieder: Update-Benachrichtigungen, Lizenzprüfungen, Store-Downloads und den First Run Wizard. Hinweis: Die Erweiterungsliste lädt Plugin-Icons dann wieder vom Shopware-Store-CDN (AWS). Telemetrie, Usage Data, GMV/Analytics und die Service Registry bleiben unabhängig von dieser Einstellung blockiert.</helpText>
+            <helpText>Allows the decorated Store, download and First Run Wizard clients, including their tracking requests. Does not remove the shared Symfony host filter or restore the core update check, usage-data reporting or services. Check required Store workflows separately. Configure for all sales channels.</helpText>
+            <helpText lang="de-DE">Gibt die eingebundenen Store-, Download- und First-Run-Wizard-Clients einschließlich ihrer Tracking-Aufrufe frei. Die separate Symfony-Host-Sperre bleibt bestehen; Core-Updatecheck, Nutzungsdatenübertragung und Services werden nicht wiederhergestellt. Benötigte Store-Abläufe einzeln prüfen. Für alle Verkaufskanäle konfigurieren.</helpText>
             <defaultValue>false</defaultValue>
         </input-field>
 
@@ -18,16 +18,16 @@
             <name>allowedAppServerOrigins</name>
             <label>Allowed app server origins</label>
             <label lang="de-DE">Erlaubte App-Server-Ursprünge</label>
-            <helpText>Optional exact origins separated by spaces, commas or line breaks, for example https://apps.example.com. These origins work even while general app-server communication remains disabled.</helpText>
-            <helpText lang="de-DE">Optionale exakte Ursprünge, getrennt durch Leerzeichen, Kommas oder Zeilenumbrüche, zum Beispiel https://apps.example.com. Diese Ursprünge funktionieren auch dann, wenn die allgemeine App-Server-Kommunikation deaktiviert bleibt.</helpText>
+            <helpText>Allows individual origins for the app-system client and app iframes, even while general app communication is disabled. Separate with spaces, commas or line breaks, for example https://apps.example.com. Scheme, host and explicit port must match; paths do not limit access. Direct external browser calls remain blocked. Reload Administration after saving.</helpText>
+            <helpText lang="de-DE">Gibt einzelne Ursprünge für App-System-Client und App-Iframes frei, auch bei gesperrter allgemeiner App-Kommunikation. Durch Leerzeichen, Kommas oder Zeilenumbrüche trennen, etwa https://apps.example.com. Schema, Host und expliziter Port müssen passen; Pfade begrenzen die Freigabe nicht. Direkte externe Browser-Aufrufe bleiben gesperrt. Administration nach dem Speichern neu laden.</helpText>
         </input-field>
 
         <input-field type="bool">
             <name>allowAppServerCommunication</name>
             <label>Allow app server communication</label>
             <label lang="de-DE">App-Server-Kommunikation erlauben</label>
-            <helpText>Re-enables outgoing requests of the app system (registration, webhooks, action buttons) and embedding app modules in the administration. Required if the shop uses apps with their own backend — this also applies to third-party apps, not only Shopware apps.</helpText>
-            <helpText lang="de-DE">Aktiviert ausgehende Requests des App-Systems wieder (Registrierung, Webhooks, Action Buttons) sowie das Einbetten von App-Modulen in der Administration. Erforderlich, wenn der Shop Apps mit eigenem Backend nutzt — das betrifft auch Dritt-Apps, nicht nur Shopware-Apps.</helpText>
+            <helpText>Allows the decorated app-system client generally (registration, webhooks, action buttons) and HTTPS app iframes. Individual allowed origins are narrower. Direct external browser calls remain blocked; disabled apps are not reactivated. Other host filters may still apply. Reload Administration after saving.</helpText>
+            <helpText lang="de-DE">Gibt den eingebundenen App-System-Client allgemein frei (Registrierung, Webhooks, Aktionsbuttons) und erlaubt HTTPS-App-Iframes. Einzelne erlaubte Ursprünge begrenzen die Freigabe enger. Direkte externe Browser-Aufrufe bleiben gesperrt; deaktivierte Apps werden nicht reaktiviert. Weitere Host-Sperren können greifen. Administration nach dem Speichern neu laden.</helpText>
             <defaultValue>false</defaultValue>
         </input-field>
     </card>
